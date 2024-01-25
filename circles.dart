@@ -145,145 +145,132 @@ class _GroupPageState extends State<GroupPage> {
                             width: double.infinity,
                             child: Stack(
                               children: [
-                                // ListView.builder for Circles
-                                Container(
-                                  height: double.infinity,
-                                  child: ListView.builder(
-                                    scrollDirection:
-                                        Axis.vertical, // Changed to vertical
-                                    itemCount: circles.length,
-                                    itemBuilder: (context, index) {
-                                      Circles circle = circles[index];
-                                      return Container(
-                                        margin: EdgeInsets.only(
-                                            bottom:
-                                                10 * fem), // Adjust as needed
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            Container(
-                                              // gestionegruppoC4K (1:78)
-                                              margin: EdgeInsets.fromLTRB(
-                                                  0 * fem,
-                                                  0 * fem,
-                                                  21 * fem,
-                                                  0 * fem),
-                                              padding: EdgeInsets.fromLTRB(
-                                                  13 * fem,
-                                                  7 * fem,
-                                                  12 * fem,
-                                                  10 * fem),
-                                              height: double.infinity,
-                                              decoration: BoxDecoration(
-                                                border: Border.all(
-                                                    color: Color(0xff000000)),
-                                                color: Color(0x44c0d100),
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        6 * fem),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Color(0x3f000000),
-                                                    offset: Offset(
-                                                        5 * fem, 8 * fem),
-                                                    blurRadius: 0 * fem,
+                                //here are my circles to fetch
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Container(
+                                      // gestionegruppoC4K (1:78)
+                                      margin: EdgeInsets.fromLTRB(
+                                          0 * fem, 0 * fem, 123 * fem, 2 * fem),
+                                      height: 56 * fem,
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Container(
+                                            // autogroupipsfmmd (5ciDqjFev6wMr68bRJipSF)
+                                            margin: EdgeInsets.fromLTRB(0 * fem,
+                                                0 * fem, 21 * fem, 0 * fem),
+                                            padding: EdgeInsets.fromLTRB(
+                                                13 * fem,
+                                                7 * fem,
+                                                12 * fem,
+                                                10 * fem),
+                                            height: double.infinity,
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                  color: Color(0xff000000)),
+                                              color: Color(0x44c0d100),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      6 * fem),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Color(0x3f000000),
+                                                  offset:
+                                                      Offset(5 * fem, 8 * fem),
+                                                  blurRadius: 0 * fem,
+                                                ),
+                                              ],
+                                            ),
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                // Navigate to the desired page when the image is clicked
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        GruppoGestione(),
                                                   ),
-                                                ],
-                                              ),
-                                              child: GestureDetector(
-                                                onTap: () {
-                                                  // Navigate to the desired page when the image is clicked
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          GruppoGestione(),
-                                                    ),
-                                                  );
-                                                },
-                                                child: Center(
-                                                  child: SizedBox(
-                                                    width: 42 * fem,
-                                                    height: 39 * fem,
-                                                    child: Image.asset(
-                                                      'assets/page-1/images/kisspng-computer-icons-scalable-vector-graphics-clip-art-p-action-gear-cog-preferences-service-options-5b631755d61188-3.png',
-                                                      fit: BoxFit.cover,
-                                                    ),
+                                                );
+                                              },
+                                              child: Center(
+                                                child: SizedBox(
+                                                  width: 42 * fem,
+                                                  height: 39 * fem,
+                                                  child: Image.asset(
+                                                    'assets/page-1/images/kisspng-computer-icons-scalable-vector-graphics-clip-art-p-action-gear-cog-preferences-service-options-5b631755d61188-3.png',
+                                                    fit: BoxFit.cover,
                                                   ),
                                                 ),
                                               ),
                                             ),
-                                            Container(
-                                              // autogroupuxomrgb (5ciDvybuo1hNE6geaauxoM)
-                                              margin: EdgeInsets.fromLTRB(
-                                                  0 * fem,
-                                                  0 * fem,
-                                                  0 * fem,
-                                                  1 * fem),
-                                              width: 100 * fem,
-                                              height: 49 * fem,
-                                              child: Stack(
-                                                children: [
-                                                  Positioned(
-                                                    // Circle Name (Replace 'YourNamePropertyHere' with the actual property)
-                                                    left: 0 * fem,
-                                                    top: 0 * fem,
-                                                    child: Align(
-                                                      child: SizedBox(
-                                                        width: 78 * fem,
-                                                        height: 34 * fem,
-                                                        child: Text(
-                                                          circle.name ??
-                                                              '', // Replace 'YourNamePropertyHere' with the actual property
-                                                          style: SafeGoogleFont(
-                                                            'Akshar',
-                                                            fontSize: 24 * ffem,
-                                                            fontWeight:
-                                                                FontWeight.w400,
-                                                            height: 1.38 *
-                                                                ffem /
-                                                                fem,
-                                                            color: Color(
-                                                                0xff000000),
-                                                          ),
+                                          ),
+                                          Container(
+                                            // autogroupuxomrgb (5ciDvybuo1hNE6geaauxoM)
+                                            margin: EdgeInsets.fromLTRB(0 * fem,
+                                                0 * fem, 0 * fem, 1 * fem),
+                                            width: 100 * fem,
+                                            height: 49 * fem,
+                                            child: Stack(
+                                              children: [
+                                                Positioned(
+                                                  // gruppo1z27 (1:34)
+                                                  left: 0 * fem,
+                                                  top: 0 * fem,
+                                                  child: Align(
+                                                    child: SizedBox(
+                                                      width: 78 * fem,
+                                                      height: 34 * fem,
+                                                      child: Text(
+                                                        'Gruppo 1',
+                                                        style: SafeGoogleFont(
+                                                          'Akshar',
+                                                          fontSize: 24 * ffem,
+                                                          fontWeight:
+                                                              FontWeight.w400,
+                                                          height:
+                                                              1.38 * ffem / fem,
+                                                          color:
+                                                              Color(0xff000000),
                                                         ),
                                                       ),
                                                     ),
                                                   ),
-                                                  Positioned(
-                                                    // gestiscigruppo2zP (1:37)
-                                                    left: 0 * fem,
-                                                    top: 28 * fem,
-                                                    child: Align(
-                                                      child: SizedBox(
-                                                        width: 100 * fem,
-                                                        height: 21 * fem,
-                                                        child: Text(
-                                                          'Gestisci Gruppo ',
-                                                          style: SafeGoogleFont(
-                                                            'Abel',
-                                                            fontSize: 16 * ffem,
-                                                            fontWeight:
-                                                                FontWeight.w400,
-                                                            height: 1.275 *
-                                                                ffem /
-                                                                fem,
-                                                            color: Color(
-                                                                0xff898989),
-                                                          ),
+                                                ),
+                                                Positioned(
+                                                  // gestiscigruppo2zP (1:37)
+                                                  left: 0 * fem,
+                                                  top: 28 * fem,
+                                                  child: Align(
+                                                    child: SizedBox(
+                                                      width: 100 * fem,
+                                                      height: 21 * fem,
+                                                      child: Text(
+                                                        'Gestisci Gruppo ',
+                                                        style: SafeGoogleFont(
+                                                          'Abel',
+                                                          fontSize: 16 * ffem,
+                                                          fontWeight:
+                                                              FontWeight.w400,
+                                                          height: 1.275 *
+                                                              ffem /
+                                                              fem,
+                                                          color:
+                                                              Color(0xff898989),
                                                         ),
                                                       ),
                                                     ),
                                                   ),
-                                                ],
-                                              ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 Positioned(
                                   top: 10 * fem,
