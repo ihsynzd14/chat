@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-
+import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +45,8 @@ class _TableEventsExampleState extends State<TableEventsExample> {
   DateTime? _rangeEnd;
   final CirclesDataService circlesDataService = CirclesDataService();
   late dynamic locale;
+  List<Dossier> dossiers = [];
+  List<Circles> circles = [];
 
   @override
   void initState() {
@@ -622,10 +624,26 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           'S': 'Servizio a Domicilio',
           'A': 'Accompagnamenti',
         };
+
+        Map<String, int> eventTypePrimaryKeys = {
+          'P': 1, // Prelievi
+          'T': 2, // Terapia
+          'E': 3, // Esami
+          'V': 4, // Visita
+          'S': 5, // Servizio a Domicilio
+          'A': 6, // Accompagnamenti
+        };
+
         bool notificationValue = eventData['notification'] ?? false;
-        String selectedEventType =
-            eventTypeAbbreviations[eventData['event_type']?['symbol']] ??
-                'Terapia';
+
+        String? selectedEventTypeAbbreviation =
+            eventData['event_type']?['symbol'];
+
+// Get the primary key corresponding to the selected abbreviation
+        int? selectedEventTypePrimaryKey = selectedEventTypeAbbreviation != null
+            ? eventTypePrimaryKeys[selectedEventTypeAbbreviation]
+            : null;
+
         List<int> selectedCircleIds = [];
         // Display the popup with the fetched event data
         showDialog(
@@ -660,11 +678,15 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                                   InputDecoration(labelText: 'Data Inizio'),
                               onChanged: (value) {
                                 setState(() {
-                                  // Update dateTimeMap with the new value
                                   dateTimeMap['date'] = value;
-                                  // Also update eventData['start_date'] with the formatted value
-                                  eventData['start_date'] =
-                                      _parseAndFormatDate(value);
+                                  // Update eventData['start_date'] with the properly formatted date and time if date and time are not null
+                                  if (dateTimeMap['date'] != null &&
+                                      dateTimeMap['time'] != null) {
+                                    eventData['start_date'] =
+                                        _parseAndFormatDateTime(
+                                            dateTimeMap['date']!,
+                                            dateTimeMap['time']!);
+                                  }
                                 });
                               },
                             ),
@@ -673,7 +695,17 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                               decoration:
                                   InputDecoration(labelText: 'Orario Inizio'),
                               onChanged: (value) {
-                                dateTimeMap['time'] = value;
+                                setState(() {
+                                  dateTimeMap['time'] = value;
+                                  // Update eventData['start_date'] with the properly formatted date and time if date and time are not null
+                                  if (dateTimeMap['date'] != null &&
+                                      dateTimeMap['time'] != null) {
+                                    eventData['start_date'] =
+                                        _parseAndFormatDateTime(
+                                            dateTimeMap['date']!,
+                                            dateTimeMap['time']!);
+                                  }
+                                });
                               },
                             ),
                             TextFormField(
@@ -681,7 +713,17 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                               decoration:
                                   InputDecoration(labelText: 'Data Fine'),
                               onChanged: (value) {
-                                dateEndTimeMap['date'] = value;
+                                setState(() {
+                                  dateEndTimeMap['date'] = value;
+                                  // Update eventData['end_date'] with the properly formatted date and time if date and time are not null
+                                  if (dateEndTimeMap['date'] != null &&
+                                      dateEndTimeMap['time'] != null) {
+                                    eventData['end_date'] =
+                                        _parseAndFormatDateTime(
+                                            dateEndTimeMap['date']!,
+                                            dateEndTimeMap['time']!);
+                                  }
+                                });
                               },
                             ),
                             TextFormField(
@@ -689,24 +731,45 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                               decoration:
                                   InputDecoration(labelText: 'Orario Fine'),
                               onChanged: (value) {
-                                dateEndTimeMap['time'] = value;
+                                setState(() {
+                                  dateEndTimeMap['time'] = value;
+                                  // Update eventData['end_date'] with the properly formatted date and time if date and time are not null
+                                  if (dateEndTimeMap['date'] != null &&
+                                      dateEndTimeMap['time'] != null) {
+                                    eventData['end_date'] =
+                                        _parseAndFormatDateTime(
+                                            dateEndTimeMap['date']!,
+                                            dateEndTimeMap['time']!);
+                                  }
+                                });
                               },
                             ),
-                            DropdownButtonFormField<String>(
-                              value: selectedEventType,
+                            DropdownButtonFormField<int>(
+                              value: selectedEventTypePrimaryKey,
                               decoration:
                                   InputDecoration(labelText: 'Tipo di evento'),
-                              items: eventTypeAbbreviations.values
-                                  .map<DropdownMenuItem<String>>(
-                                      (String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                );
-                              }).toList(),
+                              items: eventTypePrimaryKeys.entries
+                                  .map<DropdownMenuItem<int>>(
+                                (MapEntry<String, int> entry) {
+                                  String eventTypeFullName =
+                                      eventTypeAbbreviations[entry.key] ?? '';
+                                  return DropdownMenuItem<int>(
+                                    value: entry.value,
+                                    child: Text(eventTypeFullName),
+                                  );
+                                },
+                              ).toList(),
                               onChanged: (value) {
                                 setState(() {
-                                  selectedEventType = value!;
+                                  selectedEventTypePrimaryKey = value;
+                                  selectedEventTypeAbbreviation =
+                                      eventTypePrimaryKeys.entries
+                                          .firstWhere(
+                                            (entry) => entry.value == value,
+                                            orElse: () => MapEntry('',
+                                                -1), // Provide a default value for the case where the primary key is not found
+                                          )
+                                          .key;
                                 });
                               },
                             ),
@@ -867,6 +930,7 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                                                     .toList();
                                               });
                                             }
+                                            print(circlesData);
                                           } catch (error) {
                                             print(
                                                 'Error fetching circles: $error');
@@ -928,7 +992,12 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                     ),
                     TextButton(
                       onPressed: () {
-                        _updateEventData(eventPK!, eventData);
+                        _updateEventData(
+                            eventPK!,
+                            eventData,
+                            selectedEventTypePrimaryKey,
+                            selectedDossierId,
+                            circlesData);
                         Navigator.of(context).pop(); // Close the dialog
                       },
                       child: Text('Update'),
@@ -950,27 +1019,74 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     }
   }
 
-  String _parseAndFormatDate(String date) {
-    // Split the date string by 'T' to separate date and time
-    List<String> parts = date.split('T');
-    // Extract the date and time parts
-    String formattedDate = parts[0]; // Date part remains the same
-    String formattedTime = parts[1]; // Time part remains the same
+  String _parseAndFormatDateTime(String date, String time) {
+    // Split the date string by '/' to extract day, month, and year
+    List<String> dateParts = date.split('/');
+    // Split the time string by ':' to extract hours and minutes
+    List<String> timeParts = time.split(':');
 
-    // Combine the formatted date and time with 'T' separator without escaping it
-    String formattedDateTime = '$formattedDate' 'T' '$formattedTime';
+    // Combine date and time parts into a single string with the format 'yyyy-MM-ddTHH:mm:ss'
+    String formattedDateTime =
+        '${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T${timeParts[0]}:${timeParts[1]}:00';
 
     return formattedDateTime;
   }
 
-  Future<void> _updateEventData(
-      int eventPK, Map<String, dynamic> eventData) async {
+  Future<List<Dossier>> _fetchDossiers() async {
     try {
-      // Parse and format start date
-      String formattedStartDate = _parseAndFormatDate(eventData['start_date']);
+      final apiUrl = 'https://mymedbook.it/api/v1/dossier/';
+      String accessToken = await SessionManager.getAccessToken();
 
-      // Parse and format end date
-      String formattedEndDate = _parseAndFormatDate(eventData['end_date']);
+      final response = await http.get(
+        Uri.parse(apiUrl),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> dossierJson = jsonDecode(response.body);
+        return dossierJson.map((json) => Dossier.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load dossiers');
+      }
+    } catch (error) {
+      print('Error fetching dossiers: $error');
+      throw error;
+    }
+  }
+
+  Future<List<Circles>> fetchPkAndNameOnly() async {
+    final baseUrl = 'https://mymedbook.it/api/v1/circle/';
+    String bearerToken = await SessionManager.getAccessToken();
+
+    final response = await http.get(
+      Uri.parse(baseUrl),
+      headers: {
+        'Authorization': 'Bearer $bearerToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> decodedData = json.decode(response.body);
+      return decodedData.map((json) => Circles.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load circles with pk and name only');
+    }
+  }
+
+  Future<void> _updateEventData(
+      int? eventPK,
+      Map<String, dynamic> eventData,
+      int? selectedEventTypePrimaryKey,
+      int? selectedDossierId,
+      List circlesData) async {
+    try {
+      String formattedStartDate =
+          eventData['start_date'] ?? ''; // Provide default value if null
+      String formattedEndDate =
+          eventData['end_date'] ?? ''; // Provide default value if null
 
       // Create the payload for the PUT request
       Map<String, dynamic> payload = {
@@ -995,9 +1111,9 @@ class _TableEventsExampleState extends State<TableEventsExample> {
           'avatar': eventData['user']['avatar'],
           'groups': eventData['user']['groups'],
         },
-        'event_type': eventData['event_type']['pk'],
-        'circle': eventData['circle'],
-        'dossier': eventData['dossier']['pk'], // Including dossier PK
+        'event_type': selectedEventTypePrimaryKey,
+        'circle': circlesData,
+        'dossier': selectedDossierId, // Including dossier PK
         'attachments': eventData['attachments'], // Corrected attachments part
       };
 
@@ -1045,6 +1161,441 @@ class _TableEventsExampleState extends State<TableEventsExample> {
       // Handle exceptions
       print('Error updating event data: $e');
     }
+  }
+
+  Future<void> _CreateEventData(
+      Map<String, dynamic> eventData,
+      int? selectedEventTypePrimaryKey,
+      int? selectedDossierId,
+      List circlesData) async {
+    try {
+      // Create the payload for the PUT request
+      Map<String, dynamic> payload = {
+        'name': eventData['name'],
+        'desc': eventData['desc'],
+        'start_date': eventData['start_date'],
+        'end_date': eventData['end_date'],
+        'notification': eventData['notification'],
+        'authority': eventData['authority'],
+        'address': eventData['address'],
+        'event_type': selectedEventTypePrimaryKey,
+        'circle': circlesData,
+        'dossier': selectedDossierId, // Including dossier PK
+      };
+
+      // Make a PUT request to update event data
+      String apiUrl = 'https://mymedbook.it/api/v1/event/';
+      String accessToken = await SessionManager.getAccessToken();
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(payload),
+      );
+
+      void logPayload(Map<String, dynamic> payload) {
+        // Convert the payload to JSON format
+        String jsonPayload = jsonEncode(payload);
+
+        // Define the maximum length of each chunk
+        final int chunkLength = 1000;
+
+        // Log the payload in chunks
+        for (int i = 0; i < jsonPayload.length; i += chunkLength) {
+          int endIndex = (i + chunkLength < jsonPayload.length)
+              ? i + chunkLength
+              : jsonPayload.length;
+          String chunk = jsonPayload.substring(i, endIndex);
+          print(chunk);
+        }
+      }
+
+      logPayload(payload);
+
+      if (response.statusCode == 200) {
+        // Event data updated successfully
+        print('Event data updated successfully');
+      } else {
+        // Handle other status codes
+        print(
+            'Failed to update event data. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Handle exceptions
+      print('Error updating event data: $e');
+    }
+  }
+
+  void _showCreateEventDialog(BuildContext context) async {
+    TextEditingController nameController = TextEditingController();
+    TextEditingController descController = TextEditingController();
+    TextEditingController startDateController = TextEditingController();
+    TextEditingController endDateController = TextEditingController();
+    TextEditingController startTimeController = TextEditingController();
+    TextEditingController endTimeController = TextEditingController();
+    TextEditingController authorityController = TextEditingController();
+    TextEditingController addressController = TextEditingController();
+
+    DateTime? startDate;
+    TimeOfDay? startTime;
+    DateTime? endDate;
+    TimeOfDay? endTime;
+
+    List<Dossier> dossiers = await _fetchDossiers();
+    List<Circles> circles = await fetchPkAndNameOnly();
+
+    int? selectedDossierId; // Initially null for empty value
+    int? selectedCircleId; // Initially null for empty value
+
+    List<MultiSelectItem<int>> buildCircleItems(List<Circles> circles) {
+      return circles
+          .map((circle) =>
+              MultiSelectItem<int>(circle.pk ?? 0, circle.name ?? ''))
+          .toList();
+    }
+
+    List<int> selectedCircleIds = [];
+
+    int selectedEventTypePrimaryKey =
+        0; // Example value, replace with actual selection
+
+    Map<String, int> eventTypePrimaryKeys = {
+      'Prelievi': 1,
+      'Terapia': 2,
+      'Esami': 3,
+      'Visita': 4,
+      'Servizio a Domicilio': 5,
+      'Accompagnamenti': 6,
+    };
+
+    bool isNotificationEnabled = false; // Initially false
+    String? selectedEventType; // Selected event type
+
+    Future<void> _selectStartDate() async {
+      final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2101),
+      );
+      if (picked != null && picked != startDate) {
+        setState(() {
+          startDate = picked;
+          startDateController.text =
+              '${startDate!.day.toString().padLeft(2, '0')}-${startDate!.month.toString().padLeft(2, '0')}-${(startDate!.year % 100).toString().padLeft(2, '0')}';
+        });
+      }
+    }
+
+    Future<void> _selectEndDate() async {
+      final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2101),
+      );
+      if (picked != null && picked != endDate) {
+        setState(() {
+          endDate = picked;
+          endDateController.text =
+              '${endDate!.day.toString().padLeft(2, '0')}-${endDate!.month.toString().padLeft(2, '0')}-${(endDate!.year % 100).toString().padLeft(2, '0')}';
+          print(endDateController.text);
+        });
+      }
+    }
+
+    Future<void> _selectStartTime() async {
+      final TimeOfDay? picked = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+      if (picked != null && picked != startTime) {
+        setState(() {
+          startTime = picked;
+          startTimeController.text = '${startTime!.hour}:${startTime!.minute}';
+        });
+      }
+    }
+
+    Future<void> _selectEndTime() async {
+      final TimeOfDay? picked = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+      if (picked != null && picked != endTime) {
+        setState(() {
+          endTime = picked;
+          endTimeController.text = '${endTime!.hour}:${endTime!.minute}';
+        });
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              insetPadding: EdgeInsets.all(4), // Adjust the padding as needed
+              title: Text('Create New Event'),
+              content: SizedBox(
+                height: MediaQuery.of(context).size.height *
+                    0.6, // Adjust height as needed
+                width: MediaQuery.of(context).size.width * 0.7,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: nameController,
+                        decoration: InputDecoration(labelText: 'Nome'),
+                      ),
+                      TextFormField(
+                        controller: descController,
+                        decoration: InputDecoration(labelText: 'Descrizione'),
+                      ),
+                      SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextFormField(
+                                  controller: startDateController,
+                                  decoration:
+                                      InputDecoration(labelText: 'Data Inizio'),
+                                  readOnly: true,
+                                  onTap: _selectStartDate,
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.calendar_today),
+                                  onPressed: _selectStartDate,
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextFormField(
+                                  controller: startTimeController,
+                                  decoration: InputDecoration(
+                                      labelText: 'Orario Inizio'),
+                                  readOnly: true,
+                                  onTap: _selectStartTime,
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.calendar_today),
+                                  onPressed: _selectStartTime,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextFormField(
+                                  controller: endDateController,
+                                  decoration:
+                                      InputDecoration(labelText: 'Data Fine'),
+                                  readOnly: true,
+                                  onTap: _selectEndDate,
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.calendar_today),
+                                  onPressed: _selectEndDate,
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextFormField(
+                                  controller: endTimeController,
+                                  decoration:
+                                      InputDecoration(labelText: 'Orario Fine'),
+                                  readOnly: true,
+                                  onTap: _selectEndTime,
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.calendar_today),
+                                  onPressed: _selectEndTime,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        child: DropdownButtonFormField<String>(
+                          value:
+                              selectedEventType, // Initially null for empty initial value
+                          decoration: InputDecoration(
+                            labelText: 'Seleziona Tipo di Evento',
+                          ),
+                          items:
+                              eventTypePrimaryKeys.keys.map((String eventType) {
+                            return DropdownMenuItem<String>(
+                              value: eventType,
+                              child: Text(eventType),
+                            );
+                          }).toList(),
+                          onChanged: (String? value) {
+                            setState(() {
+                              selectedEventType = value;
+                              if (value != null) {
+                                selectedEventTypePrimaryKey =
+                                    eventTypePrimaryKeys[value] ?? 0;
+                              }
+                            });
+                          },
+                        ),
+                      ),
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width *
+                            0.8, // Set a fixed width based on a fraction of the screen width
+                        child: DropdownButtonFormField<int>(
+                          isExpanded: true,
+                          value: selectedDossierId,
+                          decoration: InputDecoration(
+                            labelText: 'Seleziona Dossier',
+                          ),
+                          items: [
+                            DropdownMenuItem<int>(
+                              value: null,
+                              child: Text('Seleziona Dossier'),
+                            ),
+                            for (var dossier in dossiers)
+                              DropdownMenuItem<int>(
+                                value: dossier.pk,
+                                child: Text(
+                                  dossier.name,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              selectedDossierId = value;
+                            });
+                            // Print the selected PK to the debug console
+                            print('Selected Dossier PK: $value');
+                          },
+                        ),
+                      ),
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width *
+                            0.8, // Set a fixed width based on a fraction of the screen width
+                        child: MultiSelectDialogField(
+                          items: buildCircleItems(circles),
+                          title: Text('Seleziona Gruppi'),
+                          selectedColor: Colors.blue,
+                          selectedItemsTextStyle: TextStyle(color: Colors.blue),
+                          buttonText: Text('Seleziona Gruppi'),
+                          buttonIcon: Icon(
+                            Icons.group_add,
+                            color: const Color.fromARGB(255, 0, 0, 0),
+                          ),
+                          onConfirm: (values) {
+                            selectedCircleIds = values.cast<int>();
+                            print(selectedCircleIds);
+                          },
+                          chipDisplay: MultiSelectChipDisplay(
+                            chipColor: Colors.blue,
+                            icon: Icon(Icons.delete_forever,
+                                color: Color.fromARGB(255, 255, 255, 255)),
+                            textStyle: TextStyle(color: Colors.white),
+                            onTap: (value) {
+                              setState(() {
+                                selectedCircleIds.remove(value);
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: authorityController,
+                        decoration: InputDecoration(labelText: 'Ente'),
+                      ),
+                      TextFormField(
+                        controller: addressController,
+                        decoration: InputDecoration(labelText: 'Indrizzo'),
+                      ),
+                      CheckboxListTile(
+                        title: Text(
+                          'Notifica',
+                          textAlign: TextAlign.left,
+                        ),
+                        value: isNotificationEnabled,
+                        onChanged: (value) {
+                          setState(() {
+                            isNotificationEnabled = value!;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Format start date and time
+                    String formattedStartDate =
+                        '${startDate!.year}-${startDate!.month.toString().padLeft(2, '0')}-${startDate!.day.toString().padLeft(2, '0')}T${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}:00';
+                    // Format end date and time
+                    String formattedEndDate =
+                        '${endDate!.year}-${endDate!.month.toString().padLeft(2, '0')}-${endDate!.day.toString().padLeft(2, '0')}T${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}:00';
+
+                    // Call _createEventData to create the event
+                    Map<String, dynamic> eventData = {
+                      'name': nameController.text,
+                      'desc': descController.text,
+                      'start_date': formattedStartDate,
+                      'end_date': formattedEndDate,
+                      'notification': isNotificationEnabled,
+                      'authority': authorityController.text,
+                      'address': addressController.text,
+                    };
+                    print(eventData);
+                    print(selectedEventTypePrimaryKey);
+                    _CreateEventData(
+                      eventData,
+                      selectedEventTypePrimaryKey,
+                      selectedDossierId,
+                      selectedCircleIds,
+                    );
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                  child: Text('Create'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   List<Event> _getEventsForDay(DateTime day) {
@@ -1196,6 +1747,14 @@ class _TableEventsExampleState extends State<TableEventsExample> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showCreateEventDialog(context);
+        },
+        backgroundColor: const Color.fromARGB(255, 78, 76, 175),
+        foregroundColor: Colors.white,
+        child: Icon(Icons.add_alert),
       ),
       bottomNavigationBar: Container(
         color: Color.fromARGB(255, 255, 255, 255),
